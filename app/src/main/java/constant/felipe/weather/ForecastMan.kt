@@ -6,12 +6,30 @@ import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
+import org.json.JSONArray
 import org.json.JSONObject
 
 class ForecastMan private constructor(private val context: Context) {
 
     interface OnForecastListener {
-        fun onFindForecast(forecasts: Array<Forecast>?)
+        fun onFetchForecast(forecasts: List<Forecast>?)
+    }
+
+    // T(°C) = (T(°F) - 32) × 5/9
+    private fun convertFtoC(temperature: Int): Int = (temperature - 32) * 5 / 9
+
+    private fun parseJsonArrayToForecastList(array: JSONArray): List<Forecast> {
+        val mappedList = ArrayList<Forecast>()
+        for (i in 0 until array.length() - 1) {
+            val curJsonObject = array.getJSONObject(i)
+            mappedList.add(object : Forecast {
+                override val code = curJsonObject.getString("code")
+                override val date = curJsonObject.getString("date")
+                override val high = convertFtoC(curJsonObject.getInt("high"))
+                override val low = convertFtoC(curJsonObject.getInt("low"))
+            })
+        }
+        return mappedList
     }
 
     fun fetchForecasts(callback: OnForecastListener) {
@@ -23,19 +41,21 @@ class ForecastMan private constructor(private val context: Context) {
                 Response.Listener<JSONObject> {
                     val forecasts = try {
                         print(it.toString(4))
-                        it
-                            .getJSONObject("query")
-                            .getJSONObject("results")
-                            .getJSONObject("channel")
-                            .getJSONObject("item")
-                            .get("forecast") as Array<Forecast>
+                        parseJsonArrayToForecastList(
+                            it
+                                .getJSONObject("query")
+                                .getJSONObject("results")
+                                .getJSONObject("channel")
+                                .getJSONObject("item")
+                                .getJSONArray("forecast")
+                        )
                     } catch(e: TypeCastException) {
                         null
                     }
-                    callback.onFindForecast(forecasts)
+                    callback.onFetchForecast(forecasts)
                 },
                 Response.ErrorListener {
-                    callback.onFindForecast(null)
+                    callback.onFetchForecast(null)
                 }
         )
         queue.add(request)
