@@ -11,12 +11,9 @@ import org.json.JSONObject
 
 class ForecastMan private constructor(private val context: Context) {
 
-    interface OnForecastListener {
+    interface ForecastListener {
         fun onFetchForecast(forecasts: List<Forecast>?)
     }
-
-    // T(°C) = (T(°F) - 32) × 5/9
-    private fun convertFtoC(temperature: Int): Int = (temperature - 32) * 5 / 9
 
     private fun parseJsonArrayToForecastList(array: JSONArray): List<Forecast> {
         val mappedList = ArrayList<Forecast>()
@@ -25,14 +22,14 @@ class ForecastMan private constructor(private val context: Context) {
             mappedList.add(object : Forecast {
                 override val code = curJsonObject.getString("code")
                 override val date = curJsonObject.getString("date")
-                override val high = convertFtoC(curJsonObject.getInt("high"))
-                override val low = convertFtoC(curJsonObject.getInt("low"))
+                override val high = curJsonObject.getInt("high").fromFtoC()
+                override val low = curJsonObject.getInt("low").fromFtoC()
             })
         }
         return mappedList
     }
 
-    fun fetchForecasts(callback: OnForecastListener) {
+    fun fetchForecasts(callback: ForecastListener) {
         val queue = Volley.newRequestQueue(context)
         val request = JsonObjectRequest(
                 Request.Method.GET,
@@ -40,7 +37,6 @@ class ForecastMan private constructor(private val context: Context) {
                 null,
                 Response.Listener<JSONObject> {
                     val forecasts = try {
-                        print(it.toString(4))
                         parseJsonArrayToForecastList(
                             it
                                 .getJSONObject("query")
@@ -62,7 +58,8 @@ class ForecastMan private constructor(private val context: Context) {
     }
 
     companion object {
-        private const val apiUrl = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast%20where%20woeid%20in%20(select%20woeid%20from%20geo.places(1)%20where%20text=\"São%20Carlos,%20SP\")&format=json&env=store://datatables.org/alltableswithkeys"
+        private const val apiUrl = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20weather.forecast" +
+                "%20where%20woeid%20in%20(select%20woeid%20from%20geo.places(1)%20where%20text=\"São%20Carlos,%20SP\")&format=json&env=store://datatables.org/alltableswithkeys"
 
         @SuppressLint("StaticFieldLeak")
         @Volatile

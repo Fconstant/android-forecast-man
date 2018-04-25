@@ -1,26 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal" android:layout_width="match_parent"
+    android:paddingVertical="6dp"
+    android:paddingHorizontal="4dp"
     android:layout_height="match_parent">
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="2"
+        android:width="200dp"
         android:textSize="16sp"
         android:id="@+id/day"
-        android:text="01 Apr 2018"/>
+        android:text="Data"/>
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:textSize="16sp"
         android:id="@+id/min_temp"
-        android:text="15°"/>
+        android:text="Mín."/>
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:textSize="16sp"
-        android:text="21°"
+        android:text="Máx."
         android:id="@+id/max_temp"/>
 </LinearLayout>
