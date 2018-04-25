@@ -9,7 +9,8 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(), ForecastMan.ForecastListener {
 
-    lateinit var forecastMan: ForecastMan
+    private lateinit var forecastMan: ForecastMan
+    private var forecasts: List<Forecast>? = null
 
     private val forecastListHeader: View by lazy {
         val header = this.layoutInflater.inflate(ForecastAdapter.layoutResource, forecast_list, false)
@@ -19,18 +20,38 @@ class MainActivity : AppCompatActivity(), ForecastMan.ForecastListener {
         header
     }
 
+    private fun setLoading(loading: Boolean): Unit {
+        loading_frame.visibility = if (loading) View.VISIBLE else View.GONE
+        content_panel.visibility = if (loading) View.GONE else View.VISIBLE
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         forecastMan = ForecastMan.getInstance(this.applicationContext)
-        forecastMan.fetchForecasts(this)
+        val forecasts = savedInstanceState?.getSerializable(FORECASTS_KEY) as List<Forecast>?
+        if (forecasts != null) {
+            setLoading(false)
+            this.onFetchForecast(forecasts)
+        } else {
+            setLoading(true)
+            forecastMan.fetchForecasts(this)
+        }
 
         forecast_list.addHeaderView(this.forecastListHeader)
     }
 
+    override fun onSaveInstanceState(outState: Bundle?) {
+        outState?.run {
+            putSerializable(FORECASTS_KEY, forecasts as ArrayList<Forecast>)
+        }
+        super.onSaveInstanceState(outState)
+    }
+
     override fun onFetchForecast(forecasts: List<Forecast>?) {
         if (forecasts != null) {
+            this.forecasts = forecasts
             val (todayForecast) = forecasts
 
             // Setup today
@@ -44,7 +65,10 @@ class MainActivity : AppCompatActivity(), ForecastMan.ForecastListener {
         }
 
         // Stop loading, Show results
-        loading_frame.visibility = View.GONE
-        content_panel.visibility = View.VISIBLE
+        setLoading(false)
+    }
+
+    companion object {
+        private const val FORECASTS_KEY = "@Forecasts"
     }
 }

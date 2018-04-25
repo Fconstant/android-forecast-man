@@ -19,12 +19,14 @@ class ForecastMan private constructor(private val context: Context) {
         val mappedList = ArrayList<Forecast>()
         for (i in 0 until array.length() - 1) {
             val curJsonObject = array.getJSONObject(i)
-            mappedList.add(object : Forecast {
-                override val code = curJsonObject.getString("code")
-                override val date = curJsonObject.getString("date")
-                override val high = curJsonObject.getInt("high").fromFtoC()
-                override val low = curJsonObject.getInt("low").fromFtoC()
-            })
+            mappedList.add(
+                    Forecast(
+                        code = curJsonObject.getString("code"),
+                        date = curJsonObject.getString("date"),
+                        high = curJsonObject.getInt("high").fromFtoC(),
+                        low = curJsonObject.getInt("low").fromFtoC()
+                    )
+            )
         }
         return mappedList
     }
@@ -38,14 +40,14 @@ class ForecastMan private constructor(private val context: Context) {
                 Response.Listener<JSONObject> {
                     val forecasts = try {
                         parseJsonArrayToForecastList(
-                            it
-                                .getJSONObject("query")
-                                .getJSONObject("results")
-                                .getJSONObject("channel")
-                                .getJSONObject("item")
-                                .getJSONArray("forecast")
+                                it
+                                        .getJSONObject("query")
+                                        .getJSONObject("results")
+                                        .getJSONObject("channel")
+                                        .getJSONObject("item")
+                                        .getJSONArray("forecast")
                         )
-                    } catch(e: TypeCastException) {
+                    } catch (e: TypeCastException) {
                         null
                     }
                     callback.onFetchForecast(forecasts)
